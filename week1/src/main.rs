@@ -8,11 +8,17 @@ use std::thread;
 use std::time::Duration;
 
 fn main() {
-    game::main::start();
-    let hello: Hello = Hello::new("hello world".to_string(), 12333333);
-    Hello::say(hello);
+    utils::mark_line("begin");
+    let h: Hello = Hello::new("hello world".to_string(), 12333333);
+    hello::Hello::print_json(&h);
+    Hello::say(&h);
     Hello::const_test();
     Hello::other_test();
+
+    utils::mark_line("guess number game");
+
+    game::main::start();
+    utils::mark_line("other_test");
 
     let mut wrapper = wrapper::types::new("hello message is inside box.".to_string());
 

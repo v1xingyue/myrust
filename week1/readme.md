@@ -13,3 +13,8 @@ cargo login # 需要一个token
 cargo publish # 需要 Cargo.toml 中有足够的说明
 cargo install # 安装crates.io 
 ```
+
+7. 其他
+
+- json 格式化 serde_json 和 serde
+- 终端颜色 ansi_term
