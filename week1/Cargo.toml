@@ -1,6 +1,6 @@
 [package]
 name = "week1"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["v1xingyue <qixingyue@gmail.com>"]
 description = "A short description of my package"
