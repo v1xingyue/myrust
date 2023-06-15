@@ -9,7 +9,7 @@ pub mod main {
 
         print!("game started , input a number : \n ");
 
-        let secet_number = rand::thread_rng().gen_range(1..100);
+        let secet_number = rand::thread_rng().gen_range(1, 100);
         println!("secet_number is {}", secet_number);
 
         loop {

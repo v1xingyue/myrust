@@ -18,3 +18,5 @@ cargo install # 安装crates.io
 
 - json 格式化 serde_json 和 serde
 - 终端颜色 ansi_term
+- ed25519 签名数据及验证 (注意ed25519-dalek 依赖的版本号 rand rand_core)
+- 通过环境变量传递固定私钥 :  secret_key=599f6ec8dfc486cffeebb8ddab1e5c23913b16fbaf87388c68fdf5cfcd80bf4e week1
