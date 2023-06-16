@@ -20,3 +20,4 @@ cargo install # 安装crates.io
 - 终端颜色 ansi_term
 - ed25519 签名数据及验证 (注意ed25519-dalek 依赖的版本号 rand rand_core)
 - 通过环境变量传递固定私钥 :  secret_key=599f6ec8dfc486cffeebb8ddab1e5c23913b16fbaf87388c68fdf5cfcd80bf4e week1
+- 通过 ed25519 的公钥，获得 sui 的地址
