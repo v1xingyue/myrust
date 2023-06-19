@@ -9,14 +9,14 @@ use std::thread;
 use std::time::Duration;
 
 fn main() {
-    utils::mark_line("ed25519 Keypair");
-    ed25519::ed25519_example();
     utils::mark_line("begin");
     let h: Hello = Hello::new("hello world".to_string(), 12333333);
-    hello::Hello::print_json(&h);
     Hello::say(&h);
     Hello::const_test();
     Hello::other_test();
+
+    utils::mark_line("ed25519 Keypair");
+    ed25519::sui_sign_data_example();
 
     utils::mark_line("guess number game");
 

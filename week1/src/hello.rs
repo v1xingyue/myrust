@@ -28,10 +28,6 @@ impl Hello {
         println!("ver = {} , msg = {}!", VER, MSG);
     }
 
-    pub fn print_json(&self) {
-        print!("this is json content .. \n");
-    }
-
     pub fn other_test() {
         let hello = "world";
         println!("{}", hello);

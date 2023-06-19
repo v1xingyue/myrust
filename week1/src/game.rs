@@ -5,10 +5,7 @@ pub mod main {
     use std::io;
 
     pub fn start() {
-        print!("hello public world...");
-
         print!("game started , input a number : \n ");
-
         let secet_number = rand::thread_rng().gen_range(1, 100);
         println!("secet_number is {}", secet_number);
 
