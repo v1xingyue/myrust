@@ -18,12 +18,12 @@ use std::{env, str};
 
 use crate::utils;
 
-fn msg_hash(msg: &Vec<u8>) -> Hash {
+pub fn msg_hash(msg: &Vec<u8>) -> Hash {
     let mut state = Params::new().hash_length(32).to_state();
     state.update(&msg).finalize()
 }
 
-fn to_address(pk: &PublicKey) -> String {
+pub fn to_address(pk: &PublicKey) -> String {
     let mut payload: Vec<u8> = vec![0];
     payload.extend_from_slice(pk.as_bytes());
 
@@ -34,7 +34,7 @@ fn to_address(pk: &PublicKey) -> String {
 }
 
 // secret_key=599f6ec8dfc486cffeebb8ddab1e5c23913b16fbaf87388c68fdf5cfcd80bf4e  week1
-fn get_keypair() -> Keypair {
+pub fn get_keypair() -> Keypair {
     match env::var("secret_key") {
         Ok(val) => {
             println!("key from env : {}", val);
