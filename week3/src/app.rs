@@ -12,13 +12,14 @@ pub mod app {
             Hello { name }
         }
         pub fn start(&self) {
-            println!("hello world {}!", self.name);
+            println!("hello start {}!", self.name);
         }
     }
 
     impl PluginCaller for Hello {
         fn do_action(&self) {
             println!("hello this plugin method {}!", self.name);
+            self.start();
         }
     }
 
