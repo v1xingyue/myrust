@@ -16,6 +16,12 @@ pub mod app {
         }
     }
 
+    impl From<String> for Hello {
+        fn from(value: String) -> Self {
+            Hello { name: value }
+        }
+    }
+
     impl PluginCaller for Hello {
         fn do_action(&self) {
             println!("hello this plugin method {}!", self.name);
@@ -33,9 +39,50 @@ pub mod app {
         }
     }
 
+    // 从u64 转化为 Hi 类型
+    impl From<u64> for Hi {
+        fn from(value: u64) -> Self {
+            return Hi { no: value };
+        }
+    }
+
+    impl Into<u64> for Hi {
+        fn into(self) -> u64 {
+            self.no
+        }
+    }
+
+    impl AsRef<Hi> for Hi {
+        fn as_ref(&self) -> &Hi {
+            self
+        }
+    }
+
+    impl AsMut<Hi> for Hi {
+        fn as_mut(&mut self) -> &mut Hi {
+            self
+        }
+    }
+
     impl PluginCaller for Hi {
         fn do_action(&self) {
             println!("hello this contains no:  {}!", self.no);
+        }
+    }
+
+    pub struct User {
+        name: String,
+    }
+
+    impl Drop for User {
+        fn drop(&mut self) {
+            println!("I am dropped: {}", self.name);
+        }
+    }
+
+    impl User {
+        pub fn new(name: String) -> User {
+            Self { name }
         }
     }
 }
