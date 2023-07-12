@@ -14,7 +14,7 @@ pub fn mark_line(title: &str) {
     let style: Style = Color::Green.bold();
     let add_space = format!("  {}  ", &title);
     let padding_str = format!("{:*^72}", add_space);
-    println!("[{}] - {}", now_string(), style.paint(padding_str));
+    println!("\n[{}] - {}", now_string(), style.paint(padding_str));
     // println!("{:10}", "hello");
     // println!("{:*<10}", "hello");
     // println!("{:*>10}", "hello");

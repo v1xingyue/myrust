@@ -10,7 +10,42 @@ pub mod sui {
 
     #[derive(Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    struct FilterOption {
+    struct TransactionBlockResponseOptions {
+        show_input: bool,
+        show_raw_input: bool,
+        show_effects: bool,
+        show_events: bool,
+        show_object_changes: bool,
+        show_balance_changes: bool,
+    }
+
+    impl TransactionBlockResponseOptions {
+        pub fn new(
+            show_input: bool,
+            show_raw_input: bool,
+            show_effects: bool,
+            show_events: bool,
+            show_object_changes: bool,
+            show_balance_changes: bool,
+        ) -> Self {
+            Self {
+                show_input,
+                show_raw_input,
+                show_effects,
+                show_events,
+                show_object_changes,
+                show_balance_changes,
+            }
+        }
+
+        pub fn default_options() -> Self {
+            Self::new(true, true, true, true, true, true)
+        }
+    }
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FilterOption {
         show_type: bool,
         show_owner: bool,
         show_previous_transaction: bool,
@@ -22,18 +57,10 @@ pub mod sui {
 
     impl FilterOption {
         pub fn default_filter() -> Self {
-            Self {
-                show_type: true,
-                show_owner: true,
-                show_previous_transaction: true,
-                show_display: (false),
-                show_content: (true),
-                show_bcs: (false),
-                show_storage_rebate: (false),
-            }
+            Self::new(true, true, true, false, true, false, false)
         }
 
-        pub fn new_filter(
+        pub fn new(
             show_type: bool,
             show_owner: bool,
             show_previous_transaction: bool,
@@ -55,11 +82,17 @@ pub mod sui {
     }
 
     #[derive(Serialize, Deserialize)]
-    struct Payload {
+    pub struct Payload {
         jsonrpc: String,
         id: u64,
         method: String,
         params: Vec<Value>,
+    }
+
+    impl Display for Payload {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "payload is : {}", serde_json::to_string(self).unwrap())
+        }
     }
 
     impl Payload {
@@ -72,12 +105,51 @@ pub mod sui {
             }
         }
 
-        pub fn sui_get_object(id: &str, option: &FilterOption) -> Self {
+        pub fn sui_get_object(object_id: &str, option: &FilterOption) -> Self {
             Self {
                 jsonrpc: String::from(PAYLOAD_JSONRPC_VERSION),
                 id: current_timestamp(),
                 method: String::from("sui_getObject"),
-                params: vec![Value::String(id.to_string()), to_value(option).unwrap()],
+                params: vec![
+                    Value::String(object_id.to_string()),
+                    to_value(option).unwrap(),
+                ],
+            }
+        }
+
+        pub fn unsafe_transfer_object(
+            owner_address: &str,
+            object_id: &str,
+            gas_object: &str,
+            gas_budget: u64,
+            to_address: &str,
+        ) -> Self {
+            Self {
+                jsonrpc: String::from(PAYLOAD_JSONRPC_VERSION),
+                id: current_timestamp(),
+                method: String::from("unsafe_transferObject"),
+                params: vec![
+                    Value::String(owner_address.to_string()),
+                    Value::String(object_id.to_string()),
+                    Value::String(gas_object.to_string()),
+                    Value::String(format!("{}", gas_budget)),
+                    Value::String(to_address.to_string()),
+                ],
+            }
+        }
+
+        pub fn transaction_block_payload(tx_bytes: &str, signatures: &str) -> Self {
+            let option = TransactionBlockResponseOptions::default_options();
+            Self {
+                jsonrpc: String::from(PAYLOAD_JSONRPC_VERSION),
+                id: current_timestamp(),
+                method: String::from("sui_executeTransactionBlock"),
+                params: vec![
+                    Value::String(tx_bytes.to_string()),
+                    Value::Array(vec![Value::String(signatures.to_string())]),
+                    to_value(&option).unwrap(),
+                    Value::String("WaitForLocalExecution".to_string()),
+                ],
             }
         }
     }
@@ -143,6 +215,65 @@ pub mod sui {
                 Ok(resp) => {
                     println!("{:?}", resp.text().await)
                 }
+            }
+        }
+
+        pub async fn unsafe_transfer_object(
+            &self,
+            owner_address: &str,
+            object_id: &str,
+            gas_object: &str,
+            gas_budget: u64,
+            to_address: &str,
+        ) {
+            let payload: Payload = Payload::unsafe_transfer_object(
+                owner_address,
+                object_id,
+                gas_object,
+                gas_budget,
+                to_address,
+            );
+
+            println!("{}", payload);
+
+            let gateway = self.get_gateway();
+            let client = reqwest::Client::new();
+            let res = client
+                .post(gateway)
+                .header("Content-Type", "application/json")
+                .json(&payload)
+                .send()
+                .await;
+            match res {
+                Err(err) => {
+                    println!("error: {}", err);
+                }
+                Ok(resp) => match resp.text().await {
+                    Ok(body) => println!("{}", body),
+                    Err(err) => println!("{}", err),
+                },
+            }
+        }
+
+        pub async fn sui_send_payload(&self, payload: &Payload) {
+            println!("{}", payload);
+
+            let gateway = self.get_gateway();
+            let client = reqwest::Client::new();
+            let res = client
+                .post(gateway)
+                .header("Content-Type", "application/json")
+                .json(&payload)
+                .send()
+                .await;
+            match res {
+                Err(err) => {
+                    println!("error: {}", err);
+                }
+                Ok(resp) => match resp.text().await {
+                    Ok(body) => println!("{}", body),
+                    Err(err) => println!("{}", err),
+                },
             }
         }
     }
