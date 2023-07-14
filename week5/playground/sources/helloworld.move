@@ -20,6 +20,14 @@ module playground::hello_world {
         transfer::public_transfer(object, tx_context::sender(ctx));
     }
 
+    entry fun mint_to(to_addr:address,ctx: &mut TxContext) {
+        let object = HelloWorldObject {
+            id: object::new(ctx),
+            text: string::utf8(b"Hello World!")
+        };
+        transfer::public_transfer(object, to_addr);
+    }
+
     entry fun update_text(obj: &mut HelloWorldObject,new_text: string::String){
         obj.text = new_text;
     }

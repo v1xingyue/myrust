@@ -6,7 +6,7 @@ pub mod sui {
     use std::env;
     use std::fmt::Display;
 
-    use crate::utils::current_timestamp;
+    use crate::utils::{current_timestamp, mark_line};
 
     #[derive(Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -198,8 +198,16 @@ pub mod sui {
             }
         }
 
-        pub async fn get_object_id(&self, id: &String) {
-            let payload = Payload::sui_get_object(id, &FilterOption::default_filter());
+        pub fn object_link(&self, object_id: &str) -> String {
+            format!(
+                "https://suiexplorer.com/object/{}?network={}",
+                object_id,
+                self.to_string()
+            )
+        }
+
+        pub async fn get_object_id(&self, object_id: &str) {
+            let payload = Payload::sui_get_object(object_id, &FilterOption::default_filter());
             let gateway = self.get_gateway();
             let client = reqwest::Client::new();
             let res = client
@@ -212,9 +220,10 @@ pub mod sui {
                 Err(err) => {
                     println!("error: {}", err);
                 }
-                Ok(resp) => {
-                    println!("{:?}", resp.text().await)
-                }
+                Ok(resp) => match resp.text().await {
+                    Ok(body) => println!("{}", body),
+                    Err(err) => println!("{:?}", err),
+                },
             }
         }
 
@@ -271,7 +280,10 @@ pub mod sui {
                     println!("error: {}", err);
                 }
                 Ok(resp) => match resp.text().await {
-                    Ok(body) => println!("{}", body),
+                    Ok(body) => {
+                        mark_line(" body response ");
+                        println!("{}", body)
+                    }
                     Err(err) => println!("{}", err),
                 },
             }
