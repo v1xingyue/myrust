@@ -59,11 +59,11 @@ pub fn mark_line(title: &str) {
 }
 
 pub fn base64_decode(data_b64: &str) -> Result<Vec<u8>, base64::DecodeError> {
-    let engine = engine::GeneralPurpose::new(&alphabet::STANDARD, general_purpose::NO_PAD);
+    let engine = engine::GeneralPurpose::new(&alphabet::STANDARD, general_purpose::PAD);
     engine.decode(data_b64)
 }
 
 pub fn base64_encode(data: &[u8]) -> String {
-    let engine = engine::GeneralPurpose::new(&alphabet::STANDARD, general_purpose::NO_PAD);
+    let engine = engine::GeneralPurpose::new(&alphabet::STANDARD, general_purpose::PAD);
     engine.encode(data)
 }

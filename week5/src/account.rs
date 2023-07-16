@@ -1,4 +1,5 @@
 use crate::utils::base64_decode;
+use crate::utils::base64_encode;
 use crate::utils::CustomErr;
 use blake2b_simd::{Hash, Params};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer};
@@ -14,6 +15,13 @@ pub enum IntentScope {
     TransactionEffects = 1,
     CheckpointSummary = 2,
     PersonalMessage = 3,
+}
+
+pub enum SignatureScheme {
+    ED25519 = 0x00,
+    Secp256k1 = 0x01,
+    Secp256r1 = 0x02,
+    MultiSig = 0x03,
 }
 
 pub struct SuiAccount {
@@ -80,15 +88,20 @@ impl SuiAccount {
         format!("0x{}", h.to_hex())
     }
 
-    pub fn sign_data(&self, msg_b64: &str, scope: IntentScope) {
+    pub fn sign_data(&self, msg_b64: &str, scope: IntentScope) -> Vec<u8> {
+        let scheme = SignatureScheme::ED25519;
         let msg_bytes = base64_decode(msg_b64).unwrap();
-        // let pub_bytes: &[u8; 32] = self.pair.public.as_bytes();
+        let pub_bytes: &[u8; 32] = self.pair.public.as_bytes();
         let mut intent_message: Vec<u8> = vec![scope as u8, INTENT_VERSION_V0, APPID_SUI];
         intent_message.append(&mut msg_bytes.to_vec());
-        println!("intent message : {}", hex::encode(&intent_message));
+        println!("intent : {}", base64_encode(&intent_message));
         let h = msg_hash(&intent_message);
         println!("blake2b: {}", hex::encode(h.as_bytes()));
-        let _signature: Signature = self.pair.sign(h.as_bytes());
+        let signature: Signature = self.pair.sign(h.as_bytes());
+        let mut wrapper_signature: Vec<u8> = vec![scheme as u8];
+        wrapper_signature.append(&mut signature.to_bytes().to_vec());
+        wrapper_signature.append(&mut pub_bytes.to_vec());
+        wrapper_signature
     }
 }
 
@@ -112,32 +125,28 @@ mod tests {
             account.to_address(),
             "0x0a27f6f7d3b7907fbcc4265ee8e63f5447312a8f53fb270a36f892e6f264008f"
         );
-        match base64_decode(data_b64) {
-            Err(err) => panic!("{}", err),
-            Ok(msg) => {
-                println!("{:?}", msg);
-                println!("length : {}", msg.len());
-            }
-        }
+        let signature = account.sign_data(data_b64, IntentScope::TransactionData);
+        println!("{:?}", base64_encode(&signature));
+        assert_eq!(
+            "ABCbWyMJdo/y+RDUSqJ0TghGwzfQbmVTYHdb/FQ9SX3YybVkRrB+6nh4qutm7E1ZRqUzzC0YiG2FY9rl5IQkNAewlwaDbsn0alvR1qMy7xdd9548ZGz4MI7Mp0lic5Scsg==",
+            base64_encode(&signature)
+        )
     }
 
     #[test]
-    fn decode_from_key_store() {
+    fn test_decode_from_key_store() {
         match base64_decode("AAI9gSWWADI9gC6E53o1pfhaPSdhxNbQGjT6zTIjeijF") {
-            Ok(data) => {
-                println!("{:?}", data);
-                match SuiAccount::from_seed(&data[1..]) {
-                    Err(err) => {
-                        panic!("get account error : {}", err)
-                    }
-                    Ok(account) => {
-                        assert_eq!(
-                            account.to_address(),
-                            "0x0a27f6f7d3b7907fbcc4265ee8e63f5447312a8f53fb270a36f892e6f264008f"
-                        )
-                    }
+            Ok(data) => match SuiAccount::from_seed(&data[1..]) {
+                Err(err) => {
+                    panic!("get account error : {}", err)
                 }
-            }
+                Ok(account) => {
+                    assert_eq!(
+                        account.to_address(),
+                        "0x0a27f6f7d3b7907fbcc4265ee8e63f5447312a8f53fb270a36f892e6f264008f"
+                    )
+                }
+            },
             Err(err) => {
                 panic!("err {}", err)
             }
