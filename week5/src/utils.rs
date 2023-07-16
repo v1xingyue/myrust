@@ -1,4 +1,9 @@
 use ansi_term::{Color, Style};
+use base64::{
+    alphabet,
+    engine::{self, general_purpose},
+    Engine as _,
+};
 use chrono::{DateTime, Local};
 use std::error::Error;
 use std::fmt::{Debug, Display};
@@ -51,4 +56,14 @@ pub fn mark_line(title: &str) {
     // println!("{:*<10}", "hello");
     // println!("{:*>10}", "hello");
     // println!("{:*^30}", "hello world");
+}
+
+pub fn base64_decode(data_b64: &str) -> Result<Vec<u8>, base64::DecodeError> {
+    let engine = engine::GeneralPurpose::new(&alphabet::STANDARD, general_purpose::NO_PAD);
+    engine.decode(data_b64)
+}
+
+pub fn base64_encode(data: &[u8]) -> String {
+    let engine = engine::GeneralPurpose::new(&alphabet::STANDARD, general_purpose::NO_PAD);
+    engine.encode(data)
 }

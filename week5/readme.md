@@ -56,3 +56,7 @@ pub fn now_string() -> String {
         }
     }
 ```
+
+5. 打开文档链接，可用于 demo  day 介绍
+
+cargo doc --open

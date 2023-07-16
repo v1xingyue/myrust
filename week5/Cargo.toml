@@ -2,6 +2,10 @@
 name = "week5"
 version = "0.1.0"
 edition = "2021"
+authors = ["v1xingyue <qixingyue@gmail.com>"]
+description = "This is description from Cargo.toml "
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/v1xingyue/myrust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
@@ -17,11 +21,10 @@ ed25519-dalek = "1"
 rand_core = { version = "0.5" }
 hex = "0.4.3"
 blake2b_simd = "1.0.1"
+clap = { version = "4.3.11", features = ["derive"] }
+base64 = "0.21.2"
 
 [[bin]]
-name = "hello"
+name = "cli"
 path = "src/bin/main.rs"
 
-[[bin]]
-name = "hello2"
-path = "src/bin/main2.rs"
