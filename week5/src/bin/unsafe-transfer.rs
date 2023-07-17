@@ -1,4 +1,4 @@
-use week5::api::sui::network;
+use week5::network::network;
 
 #[tokio::main]
 async fn main() {

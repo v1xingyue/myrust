@@ -1,6 +1,4 @@
-use crate::utils::base64_decode;
-use crate::utils::base64_encode;
-use crate::utils::CustomErr;
+use crate::utils::{base64_decode, base64_encode, CustomErr};
 use blake2b_simd::{Hash, Params};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer};
 use hex;

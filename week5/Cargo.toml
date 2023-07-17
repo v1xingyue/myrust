@@ -1,6 +1,6 @@
 [package]
 name = "week5"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 authors = ["v1xingyue <qixingyue@gmail.com>"]
 description = "This is description from Cargo.toml "
@@ -26,5 +26,5 @@ base64 = "0.21.2"
 
 [[bin]]
 name = "cli"
-path = "src/bin/main.rs"
+path = "src/bin/cli.rs"
 

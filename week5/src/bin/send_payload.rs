@@ -1,4 +1,4 @@
-use week5::api::sui::{network, Payload};
+use week5::{network::network, payload::Payload};
 
 #[tokio::main]
 async fn main() {
@@ -10,5 +10,10 @@ async fn main() {
     // 取  Serialized signature
     let signatures = "ABCbWyMJdo/y+RDUSqJ0TghGwzfQbmVTYHdb/FQ9SX3YybVkRrB+6nh4qutm7E1ZRqUzzC0YiG2FY9rl5IQkNAewlwaDbsn0alvR1qMy7xdd9548ZGz4MI7Mp0lic5Scsg==";
     let payload = Payload::transaction_block_payload(tx_bytes, signatures);
-    network.sui_send_payload(&payload).await;
+    match network.sui_send_payload(&payload).await {
+        Err(_) => {}
+        Ok(data) => {
+            println!("data return : {}", data.text().await.unwrap())
+        }
+    }
 }
