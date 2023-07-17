@@ -1,5 +1,5 @@
 use crate::payload::{self, FilterOption, Payload};
-use crate::response::{JsonResult, SimpleObject};
+use crate::response::{JsonResult, SimpleObject, TransactionEffect, UnsafeTransactionResult};
 use crate::utils::CustomErr;
 use reqwest::{self, Response};
 use std::{env, error::Error, fmt::Display};
@@ -91,6 +91,28 @@ impl Network {
         )
     }
 
+    pub async fn send_payload_effect(
+        &self,
+        payload: &Payload,
+    ) -> Result<JsonResult<TransactionEffect>, Box<dyn Error>> {
+        println!("payload send : {}", payload);
+        let gateway = self.get_gateway();
+        let client = reqwest::Client::new();
+        match client
+            .post(gateway)
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await
+        {
+            Ok(resp) => match resp.json::<JsonResult<TransactionEffect>>().await {
+                Err(err) => Err(Box::new(err)),
+                Ok(json_object) => Ok(json_object),
+            },
+            Err(err) => Err(Box::new(err)),
+        }
+    }
+
     pub async fn sui_send_payload(&self, payload: &Payload) -> Result<Response, Box<dyn Error>> {
         println!("payload send : {}", payload);
         let gateway = self.get_gateway();
@@ -136,7 +158,7 @@ impl Network {
         gas_object: &str,
         gas_budget: u64,
         to_address: &str,
-    ) {
+    ) -> Result<JsonResult<UnsafeTransactionResult>, Box<dyn Error>> {
         let payload: Payload = Payload::unsafe_transfer_object(
             owner_address,
             object_id,
@@ -144,9 +166,6 @@ impl Network {
             gas_budget,
             to_address,
         );
-
-        println!("{}", payload);
-
         let gateway = self.get_gateway();
         let client = reqwest::Client::new();
         let res = client
@@ -156,12 +175,10 @@ impl Network {
             .send()
             .await;
         match res {
-            Err(err) => {
-                println!("error: {}", err);
-            }
-            Ok(resp) => match resp.text().await {
-                Ok(body) => println!("{}", body),
-                Err(err) => println!("{}", err),
+            Err(err) => Err(Box::new(err)),
+            Ok(resp) => match resp.json::<JsonResult<UnsafeTransactionResult>>().await {
+                Err(err) => Err(Box::new(err)),
+                Ok(json_object) => Ok(json_object),
             },
         }
     }

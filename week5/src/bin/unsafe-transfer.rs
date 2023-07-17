@@ -12,7 +12,18 @@ async fn main() {
         3000_000,
         "0x0a27f6f7d3b7907fbcc4265ee8e63f5447312a8f53fb270a36f892e6f264008f",
     );
-    network
+    match network
         .unsafe_transfer_object(owner_address, object_id, gas_object, gas_budget, to_address)
-        .await;
+        .await
+    {
+        Err(err) => {
+            println!("{}", err)
+        }
+        Ok(result) => {
+            println!(
+                "object detail : {}",
+                serde_json::to_string_pretty(&result).unwrap()
+            )
+        }
+    }
 }

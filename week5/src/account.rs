@@ -1,3 +1,5 @@
+use crate::payload::Payload;
+use crate::response::UnsafeTransactionResult;
 use crate::utils::{base64_decode, base64_encode, CustomErr};
 use blake2b_simd::{Hash, Params};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer};
@@ -34,6 +36,7 @@ pub fn msg_hash(msg: &Vec<u8>) -> Hash {
 impl SuiAccount {
     pub fn from_keystore(store_str: &str) -> Result<Self, Box<dyn Error>> {
         match base64_decode(store_str) {
+            // 第一个字节是秘钥对类型
             Ok(data) => SuiAccount::from_seed(&data[1..]),
             Err(err) => Err(Box::new(err)),
         }
@@ -100,6 +103,13 @@ impl SuiAccount {
         wrapper_signature.append(&mut signature.to_bytes().to_vec());
         wrapper_signature.append(&mut pub_bytes.to_vec());
         wrapper_signature
+    }
+    pub fn sign_unsafe_transaciton(&self, unsafe_transaction: UnsafeTransactionResult) -> Payload {
+        let result = self.sign_data(&unsafe_transaction.tx_bytes, IntentScope::TransactionData);
+        Payload::safe_transaction_block_payload(
+            &unsafe_transaction.tx_bytes,
+            &base64_encode(&result),
+        )
     }
 }
 

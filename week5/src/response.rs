@@ -1,5 +1,3 @@
-use reqwest::{self, Error, Response};
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -43,4 +41,37 @@ pub struct ObjectContent {
     object_type: String,
     has_public_transfer: bool,
     fields: Value,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UnsafeTransactionResult {
+    pub tx_bytes: String,
+    gas: Vec<MiniObject>,
+    input_objects: Vec<ObjectInput>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MiniObject {
+    object_id: String,
+    version: u64,
+    digest: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjectInput {
+    #[serde(rename = "ImmOrOwnedMoveObject")]
+    imm_or_owned_move_object: MiniObject,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransactionEffect {
+    pub digest: String,
+    pub events: Vec<Value>,
+    raw_transaction: String,
+    transaction: Value,
+    effects: Value,
 }

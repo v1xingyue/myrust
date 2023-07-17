@@ -136,7 +136,7 @@ impl Payload {
         )
     }
 
-    pub fn transaction_block_payload(tx_bytes: &str, signatures: &str) -> Self {
+    pub fn safe_transaction_block_payload(tx_bytes: &str, signatures: &str) -> Self {
         let option = TransactionBlockResponseOptions::default_options();
         Self::build(
             String::from("sui_executeTransactionBlock"),
