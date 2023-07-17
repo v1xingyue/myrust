@@ -51,11 +51,16 @@ impl Network {
 
     pub async fn get_faucet(&self, recipient: String) {
         let info = payload::new_faucet(recipient);
+        println!(
+            "send payload : {}",
+            serde_json::to_string_pretty(&info).unwrap()
+        );
         match self.faucet_url() {
             Err(err) => {
                 println!("{}", err);
             }
             Ok(url) => {
+                println!("faucet url : {}", url);
                 let client = reqwest::Client::new();
                 let resp = client
                     .post(url)
