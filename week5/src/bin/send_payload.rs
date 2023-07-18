@@ -9,11 +9,13 @@ async fn main() {
     // sui keytool sign --address <owner_address> --data <tx_bytes>
     // 取  Serialized signature
     let signatures = "ABCbWyMJdo/y+RDUSqJ0TghGwzfQbmVTYHdb/FQ9SX3YybVkRrB+6nh4qutm7E1ZRqUzzC0YiG2FY9rl5IQkNAewlwaDbsn0alvR1qMy7xdd9548ZGz4MI7Mp0lic5Scsg==";
-    let payload = Payload::transaction_block_payload(tx_bytes, signatures);
-    match network.sui_send_payload(&payload).await {
-        Err(_) => {}
+    let payload = Payload::safe_transaction_block_payload(tx_bytes, signatures);
+    match network.send_payload_effect(&payload).await {
+        Err(err) => {
+            println!("send error : {}", err)
+        }
         Ok(data) => {
-            println!("data return : {}", data.text().await.unwrap())
+            println!("data return : {}", data.result.digest)
         }
     }
 }
