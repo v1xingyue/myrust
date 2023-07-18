@@ -31,4 +31,9 @@ module playground::hello_world {
     entry fun update_text(obj: &mut HelloWorldObject,new_text: string::String){
         obj.text = new_text;
     }
+
+    entry fun destroy(obj:HelloWorldObject){
+        let HelloWorldObject{id,text:_} = obj;
+        object::delete(id);
+    }
 }

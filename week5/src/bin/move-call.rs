@@ -1,10 +1,11 @@
-use week5::{keystore::Keystore, network::network};
+use week5::{client, keystore::Keystore, network};
 
 #[tokio::main]
 async fn main() {
-    let current_network = network();
-    println!("gateway is : {}", current_network.get_gateway());
-    println!("network is : {}", current_network);
+    let network = network::default();
+    println!("gateway is : {}", network.get_gateway());
+    println!("network is : {}", network);
+    let myclient = client::Client { network };
     let (owner_address, object_id, gas_object, gas_budget, to_address) = (
         "0x0a27f6f7d3b7907fbcc4265ee8e63f5447312a8f53fb270a36f892e6f264008f",
         "0x104732c4b8961870be54b9d04c33cb54dfec72574c33aa0cce640e6dbfb56756",
@@ -13,7 +14,7 @@ async fn main() {
         "0x0a27f6f7d3b7907fbcc4265ee8e63f5447312a8f53fb270a36f892e6f264008f",
     );
 
-    match current_network
+    match myclient
         .unsafe_transfer_object(owner_address, object_id, gas_object, gas_budget, to_address)
         .await
     {
@@ -29,10 +30,7 @@ async fn main() {
             let store = Keystore::default();
             let account = store.load_account(0).unwrap();
             let signed_transaction = account.sign_unsafe_transaciton(result.result);
-            match current_network
-                .send_payload_effect(&signed_transaction)
-                .await
-            {
+            match myclient.send_payload_effect(&signed_transaction).await {
                 Err(err) => {
                     println!("signed result error : {}", err)
                 }
@@ -40,7 +38,9 @@ async fn main() {
                     println!("reuslt : {}", serde_json::to_string_pretty(&data).unwrap());
                     println!(
                         "transaction link : {}",
-                        current_network.transaction_link(&data.result.digest.to_string())
+                        myclient
+                            .network
+                            .transaction_link(&data.result.digest.to_string())
                     )
                 }
             }
