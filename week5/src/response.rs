@@ -2,6 +2,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::default::Default;
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+enum Either<A, B> {
+    A(A),
+    B(B),
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct JsonResult<T: Default> {
     pub jsonrpc: String,
@@ -67,7 +74,19 @@ pub struct ObjectContent {
 pub struct UnsafeTransactionResult {
     pub tx_bytes: String,
     gas: Vec<MiniObject>,
-    input_objects: Vec<ObjectInput>,
+    input_objects: Vec<InputObject>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct InputObject {
+    #[serde(flatten)]
+    data: Either<MovePackage, ImmOrOwnedMoveObject>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct MovePackage {
+    #[serde(rename = "MovePackage")]
+    move_package: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -80,7 +99,7 @@ pub struct MiniObject {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ObjectInput {
+pub struct ImmOrOwnedMoveObject {
     #[serde(rename = "ImmOrOwnedMoveObject")]
     imm_or_owned_move_object: MiniObject,
 }
@@ -149,6 +168,16 @@ impl Default for ObjectContent {
             object_type: String::from(""),
             has_public_transfer: false,
             fields: Value::Null,
+        }
+    }
+}
+
+impl Default for MiniObject {
+    fn default() -> Self {
+        Self {
+            object_id: String::from(""),
+            version: 0,
+            digest: String::from(""),
         }
     }
 }
