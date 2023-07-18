@@ -2,6 +2,7 @@ use crate::utils::current_timestamp;
 use serde::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
 use std::fmt::Display;
+use std::vec::Vec;
 
 pub const VERSION: &str = "0.0.0";
 pub const PAYLOAD_JSONRPC_VERSION: &str = &"2.0";
@@ -93,6 +94,14 @@ impl Display for Payload {
     }
 }
 
+pub struct TypeArguments(Vec<String>);
+
+impl Into<Vec<Value>> for TypeArguments {
+    fn into(self) -> Vec<Value> {
+        self.0.into_iter().map(|s| Value::String(s)).collect()
+    }
+}
+
 impl Payload {
     pub fn build(method: String, params: Vec<Value>) -> Self {
         Self {
@@ -145,6 +154,32 @@ impl Payload {
                 Value::Array(vec![Value::String(signatures.to_string())]),
                 to_value(&option).unwrap(),
                 Value::String("WaitForLocalExecution".to_string()),
+            ],
+        )
+    }
+
+    pub fn move_call(
+        owner_address: &str,
+        package_object_id: &str,
+        module: &str,
+        function: &str,
+        type_arguments: Vec<Value>,
+        arguments: Vec<Value>,
+        gas_object: &str,
+        gas_budget: u64,
+    ) -> Self {
+        Self::build(
+            String::from("unsafe_moveCall"),
+            vec![
+                Value::String(owner_address.to_string()),
+                Value::String(package_object_id.to_string()),
+                Value::String(module.to_string()),
+                Value::String(function.to_string()),
+                Value::Array(type_arguments),
+                Value::Array(arguments),
+                Value::String(gas_object.to_string()),
+                Value::String(format!("{}", gas_budget)),
+                Value::Null,
             ],
         )
     }

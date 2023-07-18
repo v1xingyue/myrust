@@ -2,6 +2,7 @@ use crate::payload::{self, FilterOption, Payload};
 use crate::response::{JsonResult, SimpleObject, TransactionEffect, UnsafeTransactionResult};
 use crate::utils::CustomErr;
 use reqwest::{self, Response};
+use serde_json::Value;
 use std::{env, error::Error, fmt::Display};
 
 pub enum Network {
@@ -173,6 +174,46 @@ impl Network {
             gas_object,
             gas_budget,
             to_address,
+        );
+
+        let gateway = self.get_gateway();
+        println!("payload content : {} ", payload);
+        let client = reqwest::Client::new();
+        let res = client
+            .post(gateway)
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await;
+        match res {
+            Err(err) => Err(Box::new(err)),
+            Ok(resp) => match resp.json::<JsonResult<UnsafeTransactionResult>>().await {
+                Err(err) => Err(Box::new(err)),
+                Ok(json_object) => Ok(json_object),
+            },
+        }
+    }
+
+    pub async fn unsafe_move_call(
+        &self,
+        owner_address: &str,
+        package_object_id: &str,
+        module: &str,
+        function: &str,
+        type_arguments: Vec<Value>,
+        arguments: Vec<Value>,
+        gas_object: &str,
+        gas_budget: u64,
+    ) -> Result<JsonResult<UnsafeTransactionResult>, Box<dyn Error>> {
+        let payload: Payload = Payload::move_call(
+            owner_address,
+            package_object_id,
+            module,
+            function,
+            type_arguments,
+            arguments,
+            gas_object,
+            gas_budget,
         );
 
         let gateway = self.get_gateway();
