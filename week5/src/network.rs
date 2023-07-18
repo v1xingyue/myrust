@@ -91,6 +91,14 @@ impl Network {
         )
     }
 
+    pub fn transaction_link(&self, digest: &String) -> String {
+        format!(
+            "https://suiexplorer.com/txblock/{}?network={}",
+            digest,
+            self.to_string()
+        )
+    }
+
     pub async fn send_payload_effect(
         &self,
         payload: &Payload,
@@ -166,7 +174,9 @@ impl Network {
             gas_budget,
             to_address,
         );
+
         let gateway = self.get_gateway();
+        println!("payload content : {} ", payload);
         let client = reqwest::Client::new();
         let res = client
             .post(gateway)
