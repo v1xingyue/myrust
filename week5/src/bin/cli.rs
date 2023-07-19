@@ -27,14 +27,17 @@ use week5::{client, keystore::Keystore, network};
 async fn main() {
     let network = network::default();
     let store = Keystore::default();
-    let myclient = client::Client { network };
+    let myclient = client::default_client(network);
     println!("account count : {}", store.len());
     for idx in (0..=store.len() - 1).collect::<Vec<usize>>() {
         match store.load_account(idx) {
             Err(err) => println!("account load error : {}", err),
             Ok(account) => {
                 println!("account address : {}", account.to_address());
-                myclient.get_faucet(account.to_address()).await
+                myclient.get_faucet(account.to_address()).await;
+                myclient
+                    .get_owned_objects(account.to_address(), None, None)
+                    .await
             }
         }
     }

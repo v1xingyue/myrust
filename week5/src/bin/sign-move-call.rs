@@ -7,7 +7,7 @@ async fn main() {
     let network: network::Network = network::default();
     println!("gateway is : {}", network.get_gateway());
     println!("network is : {}", network);
-    let myclient = client::Client { network };
+    let myclient = client::default_client(network);
 
     let store = Keystore::default();
     let account = store.load_account(0).unwrap();
@@ -23,7 +23,7 @@ async fn main() {
         3000_000,
     );
 
-    match myclient.sui_send_payload(&payload).await {
+    match myclient.send_payload(&payload).await {
         Err(err) => {
             println!("{}", err)
         }

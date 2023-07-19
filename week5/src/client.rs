@@ -7,21 +7,37 @@ use std::error::Error;
 
 pub struct Client {
     pub network: Network,
+    debug: bool,
+}
+
+pub fn default_client(network: Network) -> Client {
+    Client {
+        network,
+        debug: false,
+    }
 }
 
 impl Client {
+    pub fn set_debug(&mut self) {
+        self.debug = true;
+    }
+
     pub async fn get_faucet(&self, recipient: String) {
         let info = payload::new_faucet(recipient);
-        println!(
-            "send payload : {}",
-            serde_json::to_string_pretty(&info).unwrap()
-        );
+        if self.debug {
+            println!(
+                "send payload : {}",
+                serde_json::to_string_pretty(&info).unwrap()
+            );
+        }
         match self.network.faucet_url() {
             Err(err) => {
                 println!("{}", err);
             }
             Ok(url) => {
-                println!("faucet url : {}", url);
+                if self.debug {
+                    println!("faucet url : {}", url);
+                }
                 let client = reqwest::Client::new();
                 let resp = client
                     .post(url)
@@ -30,7 +46,36 @@ impl Client {
                     .send()
                     .await
                     .unwrap();
-                println!("{}", resp.text().await.unwrap());
+                println!("get faucet result : {}", resp.text().await.unwrap());
+            }
+        }
+    }
+
+    pub async fn send_payload(&self, payload: &Payload) -> Result<Response, Box<dyn Error>> {
+        let client = reqwest::Client::new();
+        if self.debug {
+            println!(
+                "send palyload : {}",
+                serde_json::to_string(&payload).unwrap()
+            );
+        }
+        match client
+            .post(self.network.get_gateway())
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await
+        {
+            Err(err) => Err(Box::new(err)),
+            Ok(resp) => {
+                if self.debug {
+                    println!(
+                        "status : {} , content-length: {} ",
+                        resp.status(),
+                        resp.content_length().unwrap(),
+                    )
+                }
+                Ok(resp)
             }
         }
     }
@@ -39,59 +84,12 @@ impl Client {
         &self,
         payload: &Payload,
     ) -> Result<JsonResult<TransactionEffect>, Box<dyn Error>> {
-        println!("payload send : {}", payload);
-        let gateway = self.network.get_gateway();
-        let client = reqwest::Client::new();
-        match client
-            .post(gateway)
-            .header("Content-Type", "application/json")
-            .json(&payload)
-            .send()
-            .await
-        {
+        match self.send_payload(payload).await {
             Ok(resp) => match resp.json::<JsonResult<TransactionEffect>>().await {
                 Err(err) => Err(Box::new(err)),
                 Ok(json_object) => Ok(json_object),
             },
-            Err(err) => Err(Box::new(err)),
-        }
-    }
-
-    pub async fn sui_send_payload(&self, payload: &Payload) -> Result<Response, Box<dyn Error>> {
-        println!("payload send : {}", payload);
-        let gateway = self.network.get_gateway();
-        let client = reqwest::Client::new();
-        match client
-            .post(gateway)
-            .header("Content-Type", "application/json")
-            .json(&payload)
-            .send()
-            .await
-        {
-            Ok(resp) => Ok(resp),
-            Err(err) => Err(Box::new(err)),
-        }
-    }
-
-    pub async fn get_object_id(
-        &self,
-        object_id: &String,
-    ) -> Result<JsonResult<SimpleObject>, Box<dyn Error>> {
-        let payload: Payload = Payload::sui_get_object(object_id, &FilterOption::default_filter());
-        let gateway = self.network.get_gateway();
-        let client: reqwest::Client = reqwest::Client::new();
-        match client
-            .post(gateway)
-            .header("Content-Type", "application/json")
-            .json(&payload)
-            .send()
-            .await
-        {
-            Err(err) => Err(Box::new(err)),
-            Ok(resp) => match resp.json::<JsonResult<SimpleObject>>().await {
-                Err(err) => Err(Box::new(err)),
-                Ok(json_object) => Ok(json_object),
-            },
+            Err(err) => Err(err),
         }
     }
 
@@ -110,18 +108,9 @@ impl Client {
             gas_budget,
             to_address,
         );
-
-        let gateway = self.network.get_gateway();
-        println!("payload content : {} ", payload);
-        let client = reqwest::Client::new();
-        let res = client
-            .post(gateway)
-            .header("Content-Type", "application/json")
-            .json(&payload)
-            .send()
-            .await;
+        let res = self.send_payload(&payload).await;
         match res {
-            Err(err) => Err(Box::new(err)),
+            Err(err) => Err(err),
             Ok(resp) => match resp.json::<JsonResult<UnsafeTransactionResult>>().await {
                 Err(err) => Err(Box::new(err)),
                 Ok(json_object) => Ok(json_object),
@@ -151,20 +140,58 @@ impl Client {
             gas_budget,
         );
 
-        let gateway = self.network.get_gateway();
-        println!("payload content : {} ", payload);
-        let client = reqwest::Client::new();
-        let res = client
-            .post(gateway)
-            .header("Content-Type", "application/json")
-            .json(&payload)
-            .send()
-            .await;
+        let res = self.send_payload(&payload).await;
         match res {
-            Err(err) => Err(Box::new(err)),
+            Err(err) => Err(err),
             Ok(resp) => match resp.json::<JsonResult<UnsafeTransactionResult>>().await {
                 Err(err) => Err(Box::new(err)),
                 Ok(json_object) => Ok(json_object),
+            },
+        }
+    }
+
+    pub async fn get_object_id(
+        &self,
+        object_id: &String,
+    ) -> Result<JsonResult<SimpleObject>, Box<dyn Error>> {
+        let payload: Payload = Payload::sui_get_object(object_id, &FilterOption::default_filter());
+        match self.send_payload(&payload).await {
+            Err(err) => Err(err),
+            Ok(resp) => match resp.json::<JsonResult<SimpleObject>>().await {
+                Err(err) => Err(Box::new(err)),
+                Ok(json_object) => Ok(json_object),
+            },
+        }
+    }
+
+    pub async fn get_owned_objects(
+        &self,
+        owner_address: String,
+        cursor: Option<String>,
+        limit: Option<u64>,
+    ) {
+        let payload = Payload::build(
+            String::from("suix_getOwnedObjects"),
+            vec![
+                Value::String(owner_address),
+                Value::Null,
+                match cursor {
+                    None => Value::Null,
+                    Some(v) => Value::String(v),
+                },
+                match limit {
+                    None => Value::Null,
+                    Some(v) => Value::from(v),
+                },
+            ],
+        );
+        match self.send_payload(&payload).await {
+            Err(err) => {}
+            Ok(resp) => match resp.text().await {
+                Err(err) => {}
+                Ok(data) => {
+                    println!("{}", data);
+                }
             },
         }
     }
